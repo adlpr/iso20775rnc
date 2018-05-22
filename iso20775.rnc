@@ -1,0 +1,571 @@
+namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
+namespace xs = "http://www.w3.org/2001/XMLSchema"
+
+start =
+  # Data structure describing a bibliographic resource or group of like or similar resources and one or more institution’s copies of the resource or resources
+  element holdings {
+
+    # Group of data elements describing one institution’s copies of a bibliographic resource or group of like or similar bibliographic resources
+    element holding {
+
+      # Group of data elements serving as a brief identifier of an institution
+      element institutionIdentifier { codeOrIdentifier },
+
+      # Name of an institution holding one or more copies of a bibliographic resource
+      element physicalLocation { text }*,
+
+      # Data element or group of data elements giving location information for an institution.   Can be free format or inherit structure from another schema, e.g. NCIP
+      element physicalAddress {(
+        element text { xs:string }
+        | xs:any
+      )}*,
+
+      # Unique identifier used to identify a device or location within a communications network or service associated with an institution.  Can be free format or inherit structure from another schema, e.g. NCIP
+      element electronicAddress {(
+        element text { xs:string }
+        | xs:any
+      )}*,
+
+      (
+
+        # Information for a resource or group of resources summarising number of copies, and the number actually available
+        element holdingSimple {
+
+          # Group of data elements summarising the number of copies of a bibliographic resource or resources and their availability
+          element copiesSummary {
+
+            # Count of the number of physical or digital copies associated with a resource.  If unknown set to 1
+            element copiesCount {
+              [ a:defaultValue = "1" ]
+              xs:positiveInteger
+            },
+
+            # Group of data elements indicating and predicting actual availability of a group of copies
+            element status { statusType }*,
+
+            # Count of the number of people in a reservation queue for a particular resource or group of resources
+            element reservationQueueLength { xs:nonNegativeInteger }?,
+
+            # Count of the number of physical or digital copies ordered and awaiting receipt or received but not yet processed
+            element onOrderCount { xs:nonNegativeInteger }?,
+
+          },
+
+          # Group of data elements providing details of a specific copy of physical or digital resource
+          element copyInformation {
+
+            pieceIdentifier+,
+            resourceIdentifier?,
+            form?,
+
+            # Estimate of the cost of replacing a copy of a resource or an indication of the value placed on a copy
+            element monetaryValuation { monetaryValuationType }?,
+
+            sublocation*,
+            shelfLocator*,
+
+            # Text string or pointer such as a URL indicating availability and location of an electronic resource
+            element electronicLocator { electronicLocatorType }*,
+
+            # Phrase relating to a copy of a bibliographic resource, carrying additional information
+            element note { xs:string }*,
+
+            # Text string or group of data elements alphabetically identifying a unit of a resource that is published in parts.  Repeatable in the case of multiple numbering sequences
+            element enumerationAndChronology { enumChron }*,
+
+            # Group of data elements summarizing the availability of a particular physical or digital copy of a resource.
+            element availabilityInformation { availabilityInformationType }?
+
+          }    # end <copyInformation>
+
+        }    # end <holdingSimple>
+
+        |
+
+        # Group of data elements providing descriptive information and an indication of the coverage, completeness, availability and service policy of a bibliographic resource that is published serially or in multiple parts
+        element holdingStructured {
+
+          # Collection of components of a bibliographic resource including multi-volume publications and resources published serially, often received by a subscription purchases
+          element set {
+
+            # Number or phrase serving to identify a set of copies such as a subscription for a resource that is published in multiple parts or serially.  "All sets" is a reserved label indicating a consolidated summary for all sets
+            element label { xs:string }?,
+
+            form?,
+            sublocation?,
+
+            # String of characters that identifies a copy’s or a set's shelving scheme within a sublocation in relation to other copies.  Repeated in the case where runs are stored at different locations
+            element shelfLocator { xs:string },
+
+            # Text string or pointer such as a URL indicating availability and location of an electronic resource
+            element electronicLocator { electronicLocatorType }*,
+
+            # Code indicating the level of holdings of a copy set ranging from complete to signalling gaps or substantial gaps
+            element completeness {(
+              string "0"      # info not available
+              | string "1"    # complete
+              | string "2"    # incomplete
+              | string "3"    # very incomplete or scattered
+            )}?,
+
+            # Text string or group of data elements identifying a unit of a resource that is published in parts.  Repeatable in the case of multiple numbering ranges (gaps) and multiple numbering sequences
+            element enumerationAndChronology {
+
+              # Code qualifying enumeration and chronology to indicate the type of the part being enumerated
+              [ a:defaultValue = "1" ]
+              attribute unitType {(
+                string "1"      # basic
+                | string "2"    # supplement
+                | string "3"    # index
+              )}?,
+
+              # Code indicating that an enumeration and chronology is a secondary or parallel sequence
+              [ a:defaultValue = "0" ]
+              attribute altNumbering { xs:boolean }?,
+
+              # Text string qualifying and elaborating enumeration and chronology.  E.g. general statement about supplements
+              attribute note { xs:string }?,
+
+              # Group of data elements indicating the beginning of an enumeration and chronology range
+              element startingEnumAndChronology {(
+
+                element text { text }
+                |
+
+                # Either enumeration or chronology must be present; both may be present
+                element structured {
+
+                  # Group of data elements indicating the earliest enumeration such as a volume or issue number within an enumeration range
+                  element enumeration { enumerationType }*,
+
+                  # Group of data elements indicating the date of publication or issue of a part of a multi part resource and distinguishing it from other parts of the same resource
+                  element chronology { chronologyType }*
+
+                }
+
+              )},
+
+              # Group of data elements indicating the end of an enumeration and chronology range
+              element endingEnumAndChronology {(
+
+                element text { text }
+                |
+
+                # Either enumeration or chronology must be present; both may be present
+                element structured {
+
+                  # Group of data elements indicating the last enumeration  such as a volume or issue number within an enumeration range
+                  element enumeration { enumerationType }*,
+
+                  # Group of data elements indicating the date of publication or issue of a part of a multi part resource and distinguishing it from other parts of the same resource
+                  element chronology { chronologyType }*
+
+                }
+              )}?
+            }*,
+
+            # Code that indicates the extent to which individual issues of a serial or multi part resource are retained and the time period for which they are retained
+            element retention {(
+              string "0"      # unknown
+              | string "2"    # replaced by updates
+              | string "3"    # sample issue retained
+              | string "4"    # replaced by preservation format
+              | string "5"    # replaced by cumulation
+              | string "6"    # limited retention
+              | string "7"    # no retention
+              | string "8"    # permanent retention
+              | string ""     # ?
+            )}?,
+
+            resourceIdentifier?,
+
+            # Unique bibliographic part of a set, such as a volume of a serial or multi-volume work
+            element component {
+
+              pieceIdentifier+,
+              form?,
+
+              # Estimate of the cost of replacing a copy of a resource or an indication of the value placed on a copy
+              element monetaryValuation { monetaryValuationType }?,
+
+              sublocation*,
+              shelfLocator*,
+
+              # Text string or pointer such as a URL indicating availability and location of an electronic resource
+              element electronicLocator { electronicLocatorType }*,
+
+              # Phrase relating to a copy of a bibliographic resource, carrying additional information
+              element note { xs:string }*,
+
+              # Text string or group of data elements alphabetically identifying a unit of a resource that is published in parts
+              element enumerationAndChronology { enumChron }+,
+
+              # Group of data elements summarizing the availability of a particular physical or digital copy set of a bibliographic resource that is published serially or in parts
+              element availabilityInformation { availabilityInformationType }?
+
+            }*
+
+          }+    # end <set>
+
+        }    # end <holdingStructured>
+
+      ),
+
+      # Group of data elements for a resource or set of resources and their copies summarizing availability policy, conditions and charges
+      element summaryPolicy {
+
+        form,
+
+        # Phrase or structure indicating restrictions which apply in relation to loan, copy or access.  Examples: - not for loan, in library use only, overnight only, circulation limited by user type, term loan, semester loan, available for supply without return, renewal not permitted.  Recommended structure from ISO 2146
+        element availability {
+          availableFor,
+          ( element text { xs:string } | xs:any )
+        }+,
+
+        reservationPolicy?,
+
+        # Group of data elements indicating charge amounts for various services relating to the delivery of a resource
+        element feeInformation { feeInformationType }
+
+      }*,
+
+      # Group of data elements summarizing circulation and access activity for a resource or group of resources in a given time period
+      element summaryHistory {
+
+        # Time period used to calculate a statistical total
+        element countPeriod {
+
+          # Earliest date of a period used for counting
+          element countPeriodStart { xs:dateTime },
+
+          # Last date of a period used for counting
+          element countPeriodEnd { xs:dateTime },
+
+          # Group of data elements indicating the circulation activity of a resource or group of resources
+          element totalCirculation {
+
+            # Number of times that any copy of a resource or group of resources has been lent in a given time period including external loans
+            element totalCirculationCount { xs:nonNegativeInteger },
+
+            # Number of times that any copy of a resource or group of resources has been lent in a given time period not including external loans
+            element totalLoansCount { xs:nonNegativeInteger }?,
+
+            # Number of times that any copy of a resource or group of resources has been lent directly to an external user (Direct Consortia Borrowing)  in a given time period
+            element totalDCBCount { xs:nonNegativeInteger }?,
+
+            # Group of data elements indicating the number of inter library loan transactions with external libraries in a given period, including incoming and outgoing loans and copies
+            element totalILL {
+
+              # Number of inter library loan transactions with external libraries in a given period, including incoming and outgoing loans and copies for a resource or group of resources
+              element totalILLCount { xs:nonNegativeInteger },
+
+              # Number of times that any copy of a resource or a group of resources has been lent to another library or copied for another library in a given period
+              element totalILLLent { xs:nonNegativeInteger }?,
+
+              # Number of times that any copy of a resource or a group of resources has been borrowed from another library or copied from another library in a given period
+              element totalILLBorrowed { xs:nonNegativeInteger }?,
+
+            }?,
+
+          }?,    # end <totalCirculation>
+
+          # Number of times that a resource or group of resources were reserved for use in a given period
+          element totalReservationsCount { xs:nonNegativeInteger }?,
+
+          # Number of times that any copy of a resource or group of resources has been accessed in a given time period that implied physical handling or electronic access
+          element totalAccessCount { xs:nonNegativeInteger }?,
+
+          # Group of data elements summarising the total number of copies held, acquired and discarded in a given time period
+          element copiesCount {
+
+            # Number of copies of a resource or group of resources that were owned, rented or accessible by an institution in a given time period. The count at the end of the period is applicable.
+            element totalCopiesHeld { xs:positiveInteger }?,
+
+            # Group of data elements concerning number of copies of a resource or group of resources that were acquired by purchase or other means in a given time period
+            element totalAcquired {
+
+              # Number of copies of a resource or group of resources that were acquired by purchase or other means in a given time period
+              element totalAcquiredCount { xs:nonNegativeInteger },
+
+              # Group of data elements that describe and define a group of resources and their associated copies within an institution’s bibliographic resources
+              element collection {
+
+                # Number of copies of a resource or group of resources that are included in a collection
+                element totalCollectionCount { xs:positiveInteger },
+
+                # Group of data elements describing and differentiating a collection including location and material type attributes
+                element collectionProfile {
+
+                  # Code or text string that identifies an attribute of a collection
+                  element collectionCode { text },
+
+                  # Description of a property or properties that are common to all copies of a collection
+                  element collectionDescription { text }
+
+                }*
+
+              }*
+
+            }?,
+
+            # Number of copies of a resource or group of resources that were discarded from a collection in a given time period
+            element totalDiscardedCount { xs:nonNegativeInteger }?
+
+          }    # end <copiesCount>
+
+        }*,    # end <countPeriod>
+
+        # Group of data elements indicating when a resource or group of resources was last active and the type of activity involved
+        element lastActivityInfo {
+
+          # Date and time on which a copy or group of copies was last involved in a circulation or delivery transaction that implied physical handling or electronic access, such as a loan, return, transfer or download
+          element lastActivityDate { xs:dateTime },
+
+          # Code or phrase indicating the nature of the last activity of a copy of bibliographic resource.  Examples loan, return, stocktake, transfer
+          element lastActivityType { codeOrIdentifier }?
+
+        }*
+
+      }?    # end <summaryHistory>
+
+    }+,    # end <holding>
+
+    # Group of data elements identifying and describing one or more works, created by intellectual effort that may be expressed in physical or digital form.  If more than one resource is present then the holdings relate to any one of those resources: the resources are treated as interchangeable
+    element resource {
+
+      resourceIdentifier*,
+      form?,
+
+      # Text string identifying a resource in relation to its parent resource.  May be overridden by enumerationAndChronology at copy level and set level but not recommended in combination with holdingStructured.
+      element partDetail { text }?
+
+    }*
+
+  }    # end <holdings>
+
+
+
+enumChron =
+  # Code qualifying enumeration and chronology to indicate the type of part being enumerated
+  [ a:defaultValue = "1" ]
+  attribute unitType {(
+    string "1"      # basic
+    | string "2"    # supplement
+    | string "3"    # index
+  )}?,
+
+  # Code indicating that an enumeration and chronology is a secondary or parallel sequence
+  [ a:defaultValue = "0" ]
+  attribute altNumbering { xs:boolean }?,
+
+  # Text string qualifying and elaborating enumeration and chronology.  E.g. general statement about supplements
+  attribute note { xs:string }?,
+
+  (
+    element text { text }
+    |
+    element structured {
+      # Group of data elements indicating alpha-numeric identification of a component of a multi part resource, such as a volume or issue.  Either enumeration or chronology must be present; both may be present
+      element enumeration { enumerationType }*,
+
+      # Group of data elements indicating the date of publication or issue of a part of a multi part resource and distinguishing it from other parts of the same resource. Either enumeration or chronology must be present; both may be present
+      element chronology { chronologyType }*,
+    }
+  )
+
+
+
+# Group of data elements comprising a value in the form of a code or identifier with an indication of a list or source within which the value is unique.
+codeOrIdentifier =
+
+  # Identifier or identifying code
+  element value { text },
+
+  # Code, phrase or pointer indicating a source within which a value is unique
+  element typeOrSource {(
+
+    # Direction to a definitive list of values within which an identifier or code is unique such as a URL or URN
+    element pointer { xs:anyURI }
+
+    # Phrase indicating a definitive list of values within which an identifier or code is unique
+    | element text { text }
+
+  )}
+
+
+
+availabilityInformationType =
+
+  # Group of data elements indicating and predicting actual availability of a copy or group of copies
+  element status {
+
+    # Code that indicates the availability for loan or access of a copy or group of copies in the context of a particular request
+    [ a:defaultValue = "0" ]
+    element availabilityStatus {(
+      string "0"      # unknown
+      | string "1"    # available
+      | string "2"    # not available
+      | string "3"    # possibly available
+    )}?,
+
+    availableFor?,
+
+    # Date and time on which a resource or a particular copy of a resource will be ready for delivery or access
+    element dateTimeAvailable { xs:dateTime }?
+
+  }*,
+
+  # Phrase or structure indicating restrictions which apply in relation to loan, copy or access.  Examples:  not for loan, in library use only, overnight only... Recommended structure from ISO 2146
+  element policy { xs:any }?,
+
+  # Group of data elements or single element indicating charge amounts for various services relating to the delivery of a resource
+  element feeInformation { feeInformationType }?,
+
+  reservationPolicy?,
+
+  # Count of the number of people in a reservation queue for a particular copy of a resource
+  element reservationQueue { xs:nonNegativeInteger }?
+
+
+
+statusType =
+
+  # Count of the number of physical or digital copies of a resource that are available for use or delivery in the context of a particular request
+  element availableCount { xs:nonNegativeInteger }?,
+
+  availableFor?,
+
+  # Date and time on which a resource or any copy of a resource will be ready for delivery
+  element earliestDispatchDate { xs:dateTime }?,
+
+
+
+pieceIdentifier =
+  # Group of data elements that identify a specific instance of a resource
+  element pieceIdentifier { codeOrIdentifier }
+
+
+
+resourceIdentifier =
+  # Group of data elements identifying a bibliographic resource or its associated metadata record with an indication of a list or source list within which the identifier is unique
+  element resourceIdentifier { codeOrIdentifier }
+
+
+
+form =
+  # Group of data elements concerning physical or digital characteristics of a bibliographic resource that may constrain its use or indicate software that can read and display the resource
+  element form { codeOrIdentifier }
+
+
+
+electronicLocatorType =
+
+  # Code that indicates authentication or other requirements necessary in order to access an electronic resource at a specific address.  Used in combination with holding / holdingSimple / availabilityInformation.
+  attribute accessRestrictions {
+    string "0"      # unknown
+    | string "1"    # unrestricted access
+    | string "2"    # access with authorization
+    | string "3"    # preview only
+    | string "4"    # no online access
+    | string "5"    # restrictions unspecified
+    | string "6"    # access restricted URL based
+    | string ""     # ?
+  }?,
+
+  (
+    # Direction to a definitive list of values within which an identifier or code is unique such as a URL or URN
+    element pointer { xs:anyURI }
+
+    # Phrase indicating a definitive list of values within which an identifier or code is unique such as a URL or URN
+    | element text { text }
+  )
+
+
+
+shelfLocator =
+  # String of characters that identifies a copy’s or a set's shelving schem within its sublocation in relation to other copies.  Rarely repeated except in the case of parts being at different locations, e.g. inserted CD within a book
+  element shelfLocator { xs:string }
+
+
+
+sublocation =
+  # Name or code of a section and / or collection of a library or other institution that normally stores a copy or set when it is not in use, on loan or on the reservation shelves. Repeatable in the case of electronic copies that may be accessible from more than one location
+  element sublocation { xs:string }
+
+
+
+monetaryValuationType =
+  # Code from ISO 4217 indicating the currency of a particular sum of money
+  attribute currencyCode { xs:string }?,
+  xs:decimal
+
+
+
+feeInformationType = (
+    # Text string indicating charge amounts for various services relating to the delivery of a resource
+    element feeText { text }
+
+    # Group of data elements indicating charge amounts for various services relating to the delivery of a resource
+    | element feeStructured {
+
+      # Code or phrase representing the reason for a charge such as a service charge or fee.  Examples: – loan fee, reservation fee, digitization fee, reference look up fee etc.
+      element feeReason { xs:string }?,
+
+      # Code or phrase indicating the coverage of a fee amount.  examples: – per image, per page, per 10 pages or part thereof
+      element feeUnit { xs:string }?,
+
+      # Sum of money required for a purchase or service
+      element feeAmount { monetaryValuationType }
+
+    }+
+  )
+
+
+
+enumerationType =
+
+  # Number indicating the hierarchical sequence of an enumeration element in relation to other similar elements in an enumeration and chronology group with the broadest element having the lowest level
+  attribute level { xs:integer },
+
+  # Label describing the contents and level of an enumeration element
+  element caption { text }?,
+
+  # Number, letter or word that combined with an enumeration caption identifies a unit of a resource that is published in parts and identifying the relationship of the part to the whole resource
+  element value { text }
+
+
+chronologyType =
+
+  # Number indicating the hierarchical sequence of a chronological element in relation to other similar elements in an enumeration and chronology group with the broadest element having the lowest level
+  attribute level { xs:integer }?,
+
+  # Label describing the contents and level of a chronological element
+  element caption { text }?,
+
+  # Phrase expressing a time period identifying a unit of a resource that is published in parts and identifying the relationship of the part to the whole resource
+  element value { text }
+
+
+
+availableFor =
+  # Code indicating the nature of service available in relation to a specific bibliographic resource
+  element availableFor {(
+    string "0"      # unspecified
+    | string "1"    # loan:  request for a loan of a physical resource
+    | string "2"    # physical copy:  request for a physical copy of a physical or digital resource to be made available for collection or delivery
+    | string "3"    # digital copy:  request for a digital copy of a physical or digital resource to be made available, e.g. PDF to be made available for collection from a website or delivery to an email address
+    | string "4"    # online access:  request for authorisation to access a digital resource
+    | string "5"    # reference look-up:  request for consultation of a resource by a reference service, e.g. to consult the index or table of contents to determine if specific content is present
+    | string "6"    # other
+  )}
+
+
+
+reservationPolicy =
+  # Code indicating whether a party owning or managing a resource will accept reservations for the resource
+  element reservationPolicy {(
+    string "0"      # unknown
+    | string "1"    # will accept
+    | string "2"    # will not accept
+    | string "3"    # will possibly accept
+  )}
