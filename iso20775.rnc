@@ -95,7 +95,7 @@ start =
             sublocation?,
 
             # String of characters that identifies a copy’s or a set's shelving scheme within a sublocation in relation to other copies.  Repeated in the case where runs are stored at different locations
-            element shelfLocator { xs:string },
+            element shelfLocator { xs:string }*,
 
             # Text string or pointer such as a URL indicating availability and location of an electronic resource
             element electronicLocator { electronicLocatorType }*,
