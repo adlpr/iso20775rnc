@@ -225,7 +225,7 @@ start =
         reservationPolicy?,
 
         # Group of data elements indicating charge amounts for various services relating to the delivery of a resource
-        element feeInformation { feeInformationType }
+        element feeInformation { feeInformationType }?
 
       }*,
 
